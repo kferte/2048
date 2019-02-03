@@ -1,3 +1,5 @@
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
+
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
@@ -108,21 +110,127 @@ public class GameBoard {
         }
     }
 
+    private boolean move(int row, int col, int horizontalDirection, int verticalDirection, Direction dir){
+        boolean canMove = false;
+        Tile current = board[row][col];
+        if(current == null) return false;
+        boolean move = true;
+        int newColumn = col;
+        int newRow = row;
+        while (move){
+            newColumn += horizontalDirection;
+            newRow += verticalDirection;
+            if(checkOutOfBounds(dir, newRow, newColumn)) break;
+            if(board[newRow][newColumn] == null){
+                board[newRow][newColumn] = current;
+                board[newRow - verticalDirection][newColumn - horizontalDirection] = null;
+                board[newRow][newColumn].setSlideTo(new Point(newRow, newColumn));
+            } else if(board[newRow][newColumn].getValue() == current.getValue() && board[newRow][newColumn].CanCombine()){
+                board[newRow][newColumn].setCanCombine(false);
+                board[newRow][newColumn].setValue(board[newRow][newColumn].getValue() * 2);
+                canMove = true;
+                board[newRow - verticalDirection][newColumn - horizontalDirection] = null;
+                board[newRow][newColumn].setSlideTo(new Point(newRow, newColumn));
+                //board[newRow][newColumn].setCombineAnimation(true);
+                //add to score
+            } else {
+                move = false;
+            }
+        }
+        return canMove;
+    }
+
+    private boolean checkOutOfBounds(Direction dir, int row, int col) {
+        if(dir == Direction.LEFT){
+            return col < 0;
+        } else if(dir == Direction.RIGHT){
+            return col > COLUMNS - 1;
+        } else if(dir == Direction.UP){
+            return row < 0;
+        } else if(dir == Direction.DOWN){
+            return row > ROWS - 1;
+        }
+        return false;
+    }
+
+    private void moveTiles(Direction dir){
+        boolean canMove = false;
+        int horizontalDirection = 0;
+        int verticalDirection = 0;
+
+        if(dir == Direction.LEFT){
+            horizontalDirection = -1;
+            for(int row = 0; row < ROWS; row++){
+                for(int col = 0; col < COLUMNS; col++){
+                    if(!canMove){
+                        canMove = move(row, col, horizontalDirection, verticalDirection, dir);
+                    }
+                    else move(row, col, horizontalDirection, verticalDirection, dir);
+                }
+            }
+        } else if(dir == Direction.RIGHT){
+            horizontalDirection = 1;
+            for(int row = 0; row < ROWS; row++){
+                for(int col = COLUMNS - 1; col >= 0; col--){
+                    if(!canMove){
+                        canMove = move(row, col, horizontalDirection, verticalDirection, dir);
+                    }
+                    else move(row, col, horizontalDirection, verticalDirection, dir);
+                }
+            }
+        } else if(dir == Direction.UP){
+            verticalDirection = -1;
+            for(int row = 0; row < ROWS; row++){
+                for(int col = 0; col < COLUMNS; col++){
+                    if(!canMove){
+                        canMove = move(row, col, horizontalDirection, verticalDirection, dir);
+                    }
+                    else move(row, col, horizontalDirection, verticalDirection, dir);
+                }
+            }
+        } else if(dir == Direction.DOWN){
+            horizontalDirection = 1;
+            for(int row = ROWS - 1; row >= 0; row++){
+                for(int col = 0; col < COLUMNS; col++){
+                    if(!canMove){
+                        canMove = move(row, col, horizontalDirection, verticalDirection, dir);
+                    }
+                    else move(row, col, horizontalDirection, verticalDirection, dir);
+                }
+            }
+        } else {
+            System.out.println(dir + " is not a valid direction.");
+        }
+
+        for(int row = 0; row < ROWS; row++){
+            for(int col = 0; col < COLUMNS; col++){
+                Tile current = board[row][col];
+                if(current == null) continue;
+                current.setCanCombine(true);
+            }
+        }
+
+        if(canMove){
+            spawnRandom();
+            //check dead
+        }
+    }
+
     private void checkKeys() {
         if(Keyboard.typed(KeyEvent.VK_LEFT)){
-            //move tiles left
+            moveTiles(Direction.LEFT);
             if(!hasStarted) hasStarted = true;
         }
         if(Keyboard.typed(KeyEvent.VK_RIGHT)){
-            //move tiles right
+            moveTiles(Direction.LEFT);
             if(!hasStarted) hasStarted = true;
         }
         if(Keyboard.typed(KeyEvent.VK_UP)){
-            //move tiles up
+            moveTiles(Direction.LEFT);
             if(!hasStarted) hasStarted = true;
         }
         if(Keyboard.typed(KeyEvent.VK_DOWN)){
-            //move tiles down
+            moveTiles(Direction.LEFT);
             if(!hasStarted) hasStarted = true;
         }
     }
