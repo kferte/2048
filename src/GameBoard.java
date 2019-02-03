@@ -103,10 +103,36 @@ public class GameBoard {
                 Tile current = board[row][col];
                 if(current == null) continue;
                 current.update();
-                // reset position
+                resetPosition(current, row, col);
                 if(current.getValue() == 2048)
                     won = true;
             }
+        }
+    }
+
+    private void resetPosition(Tile current, int row, int col){
+        if(current == null) return;
+        int x = getTileX(col);
+        int y = getTileY(row);
+        int distX = current.getX() - x;
+        int distY = current.getY() - y;
+        if(Math.abs(distX) < Tile.SLIDE_SPEED){
+            current.setX(current.getX() - distX);
+        }
+        if(Math.abs(distY) < Tile.SLIDE_SPEED){
+            current.setY(current.getY() - distY);
+        }
+        if(distX < 0){
+            current.setX(current.getX() + Tile.SLIDE_SPEED);
+        }
+        if(distY < 0){
+            current.setY(current.getY() + Tile.SLIDE_SPEED);
+        }
+        if(distX > 0){
+            current.setX(current.getX() - Tile.SLIDE_SPEED);
+        }
+        if(distY > 0){
+            current.setY(current.getY() - Tile.SLIDE_SPEED);
         }
     }
 
@@ -125,6 +151,7 @@ public class GameBoard {
                 board[newRow][newColumn] = current;
                 board[newRow - verticalDirection][newColumn - horizontalDirection] = null;
                 board[newRow][newColumn].setSlideTo(new Point(newRow, newColumn));
+                canMove = true;
             } else if(board[newRow][newColumn].getValue() == current.getValue() && board[newRow][newColumn].CanCombine()){
                 board[newRow][newColumn].setCanCombine(false);
                 board[newRow][newColumn].setValue(board[newRow][newColumn].getValue() * 2);
@@ -189,8 +216,8 @@ public class GameBoard {
                 }
             }
         } else if(dir == Direction.DOWN){
-            horizontalDirection = 1;
-            for(int row = ROWS - 1; row >= 0; row++){
+            verticalDirection = 1;
+            for(int row = ROWS - 1; row >= 0; row--){
                 for(int col = 0; col < COLUMNS; col++){
                     if(!canMove){
                         canMove = move(row, col, horizontalDirection, verticalDirection, dir);
@@ -212,8 +239,43 @@ public class GameBoard {
 
         if(canMove){
             spawnRandom();
-            //check dead
+            checkDead();
         }
+    }
+
+    private void checkDead(){
+        for(int row = 0; row < ROWS; row++){
+            for (int col = 0; col < COLUMNS; col++){
+                if(board[row][col] == null) return;
+                if(checkSurroundingTiles(row, col, board[row][col])){
+                    return;
+                }
+            }
+        }
+
+        dead = true;
+        //setHighScore(score);
+    }
+
+    private boolean checkSurroundingTiles(int row, int col, Tile current){
+        if(row > 0){
+            Tile check = board[row - 1][col];
+            if(check == null) return true;
+            if(current.getValue() == check.getValue()) return true;
+        } else if(row < ROWS - 1){
+            Tile check = board[row + 1][col];
+            if(check == null) return true;
+            if(current.getValue() == check.getValue()) return true;
+        } else if(col > 0){
+            Tile check = board[row][col - 1];
+            if(check == null) return true;
+            if(current.getValue() == check.getValue()) return true;
+        } else if(row < COLUMNS - 1){
+            Tile check = board[row][col + 1];
+            if(check == null) return true;
+            if(current.getValue() == check.getValue()) return true;
+        }
+        return false;
     }
 
     private void checkKeys() {
@@ -222,15 +284,15 @@ public class GameBoard {
             if(!hasStarted) hasStarted = true;
         }
         if(Keyboard.typed(KeyEvent.VK_RIGHT)){
-            moveTiles(Direction.LEFT);
+            moveTiles(Direction.RIGHT);
             if(!hasStarted) hasStarted = true;
         }
         if(Keyboard.typed(KeyEvent.VK_UP)){
-            moveTiles(Direction.LEFT);
+            moveTiles(Direction.UP);
             if(!hasStarted) hasStarted = true;
         }
         if(Keyboard.typed(KeyEvent.VK_DOWN)){
-            moveTiles(Direction.LEFT);
+            moveTiles(Direction.DOWN);
             if(!hasStarted) hasStarted = true;
         }
     }

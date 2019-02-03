@@ -7,7 +7,7 @@ import java.awt.image.BufferedImage;
 public class Game extends JPanel implements KeyListener, Runnable {
 
     public static final int WIDTH = 400;
-    public static final int HEIGHT = 630;
+    public static final int HEIGHT = 430;
     public static final Font font = new Font("Tahoma", Font.PLAIN, 28);
     private Thread game;
     private boolean running;
